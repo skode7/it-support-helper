@@ -6,7 +6,7 @@ An AI first-line IT support bot built with n8n and Gemini. It answers an employe
 
 ## How it works
 
-![Workflow](docs/it_helper_workflow.png.png)
+![Workflow](docs/it_helper_workflow.png)
 
 1. **Chat Trigger**: the user types their problem into the chat.
 2. **Gemini**: the model answers based on the knowledge base in the system prompt and returns JSON (`confident`, `needs_ticket`, `category`, `priority`, `answer`, `summary`).
