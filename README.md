@@ -1,4 +1,4 @@
-# it-support-helper
+# IT-Support-Helper
 
 An AI first-line IT support bot built with n8n and Gemini. It answers an employee's IT problem using only a given knowledge base, and logs a ticket to Google Sheets when it can't solve the problem or when the issue needs IT staff.
 
