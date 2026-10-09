@@ -1,0 +1,635 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [0, 0],
+      "id": "82e71943-07c5-4818-96f0-1e71d11be4f3",
+      "name": "When chat message received",
+      "webhookId": "1c6b6c40-79ac-4805-acc8-3f8d78e2555e"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.chatInput }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "Olet valokuvausliikkeen sisäinen ICT-tukibotti. Autat myymälä- ja toimistohenkilökuntaa ensilinjan IT-ongelmissa. Vastaat aina suomeksi, lyhyesti ja numeroituina vaiheina.  SÄÄNNÖT 1. Vastaa VAIN alla olevan tietopohjan perusteella. Älä keksi ratkaisuja, valikkopolkuja tai komentoja, joista et ole varma. 2. Jos ongelma ei vastaa tietopohjaa tai et ole varma, älä arvaa. Palauta confident=false. 3. Älä koskaan ohjeista poistamaan, alustamaan tai ylikirjoittamaan asiakkaiden kuvia tai tilauksia. 4. Älä pyydä tai käsittele salasanoja tai asiakkaiden henkilötietoja. Salasanan nollaus tehdään aina ICT:n kautta. 5. Jos kyse on epäillystä tietomurrosta tai tietojenkalastelusta (phishing), kuvadatan häviämisestä, kassan tai maksupäätteen kaatumisesta aukioloaikana tai useamman työpisteen yhtäaikaisesta viasta, palauta needs_ticket=true ja priority=korkea. 6. Palauta pelkkä JSON ilman ```-aitoja tai muuta tekstiä. 7. confident = tiedätkö vastauksen tietopohjan perusteella. needs_ticket = true aina, kun tietopohja käskee luoda tiketin tai eskaloida (salasana, phishing, kassa kaatunut, usean työpisteen vika, tilaus puuttuu varastosta), tai kun confident=false. Muuten needs_ticket=false. Kun needs_ticket=true, kerro answer-kentässä käyttäjälle, että tiketti luodaan, ja anna mahdolliset kiireelliset ohjeet (esim. phishingissä: älä klikkaa linkkiä).  VASTAUSFORMAATTI (palauta vain validi JSON) {   \"confident\": true/false,   \"needs_ticket\": true/false,   \"category\": \"Tulostus | Passikuvaus | Kassa | Verkko | Käyttäjätunnus | Ohjelmisto | Kuvankäsittely | Neuvotteluhuone/AV | Muu\",   \"priority\": \"matala | normaali | korkea\",   \"answer\": \"vastaus vaiheittain, tai 'En osaa ratkaista tätä varmasti, luodaan tiketti.'\",   \"summary\": \"ongelma yhdellä rivillä tikettiä varten\"    }  TIETOPOHJA  [Kuvatulostus / minilab] - Tulosteissa raitoja tai juovia: 1) suorita tulostimen suuttimien/pään puhdistus laitteen valikosta, 2) tulosta testikuva, 3) jos raidat jäävät, vaihda värikasetti/nauha. Jos ei auta, eskaloi. - Värit pielessä tai tulosteet liian tummia/vaaleita: 1) tarkista, ettei kuvaa ole värienhallinnoitu kahdesti (ohjelma + tulostin), 2) varmista oikea paperiprofiili valittu, 3) aja kalibrointi jos laite tukee. Jos useita työpisteitä saman vian kanssa, eskaloi. - Paperitukos: 1) sammuta laite, 2) avaa luukku ja vedä paperi ulos tulosuuntaan, 3) tarkista ettei paperirullassa ole väärää kokoa, 4) käynnistä ja tulosta testikuva. - Tulostin ei vastaa tulostustyöhön: 1) tarkista virta ja kaapeli/verkkoyhteys, 2) käynnistä tulostin uudelleen, 3) tyhjennä tulostusjono tietokoneelta, 4) yritä uudelleen. - Paperi tai muste loppu: ohjeista vaihtamaan tarvike ja kuittaamaan vaihto laitteeseen. Jos tarvike puuttuu varastosta, luo tiketti (tilaus).  [Asiakkaan itsepalvelupiste / kuvakioski] - Kioski ei lue muistikorttia: 1) kokeile toista korttia, 2) puhalla/tarkista kortin liittimet, 3) käynnistä kioski uudelleen. Jos ei toimi, tiketti. - Kioskin kosketusnäyttö ei reagoi: 1) pyyhi näyttö, 2) käynnistä uudelleen virtanapista. Jos ei auta, tiketti. - Kioskin tilaus ei siirry tulostukseen: 1) tarkista verkkoyhteys, 2) tarkista että tulostimessa on paperia, 3) jos tilaus näkyy mutta ei tulostu, tiketti (korkea).  [Passikuvaus] - Kuva hylätään (varjot, heijastus, silmät): 1) tarkista valaistus ja taustan tasaisuus, 2) pyydä asiakasta asettumaan suoraan kameraan, 3) ota uusi kuva. - Kamera ei yhdisty ohjelmaan: 1) tarkista USB-kaapeli ja virta, 2) kokeile toista USB-porttia, 3) käynnistä ohjelma ja kamera uudelleen. Jos ei auta, tiketti.  [Kassa ja maksut] - Maksupääte ei yhdisty: 1) tarkista verkkoyhteys ja pääteen akku/virta, 2) käynnistä pääte uudelleen, 3) tarkista ettei kassajärjestelmä ole jumittunut. Jos vika jatkuu aukioloaikana, eskaloi (korkea). - Kuittitulostin ei tulosta: 1) tarkista rulla ja kansi, 2) käynnistä tulostin, 3) tarkista kaapeli. - Viivakoodinlukija ei lue: 1) puhdista lukuikkuna, 2) kokeile toista tuotetta, 3) irrota ja kytke USB uudelleen.  [Verkko] - Wi-Fi ei toimi yhdellä laitteella: 1) unohda verkko ja yhdistä uudelleen, 2) tarkista lentokonetila, 3) käynnistä laite uudelleen. - Netti ei toimi koko myymälässä: eskaloi (korkea), pyydä kertomaan toimiiko reititin (merkkivalot). - Verkkolevy/jaettu kansio ei aukea: 1) tarkista verkkoyhteys, 2) kirjaudu ulos ja sisään, 3) jos virhe säilyy, tiketti (älä ohjeista tekemään muutoksia).  [Käyttäjätunnukset] - Salasana unohtunut tai tili lukittu: ei ratkaista botilla. Luo tiketti (normaali), älä kysy salasanaa. - Epäilyttävä sähköposti/linkki: ohjeista olemaan klikkaamatta, ei vastaamaan ja ilmoittamaan ICT:lle. Eskaloi (korkea).  [Ohjelmistot] - Photoshop/Lightroom kysyy lisenssiä tai ei käynnisty: 1) kirjaudu ulos ja sisään Adobe-tilille, 2) käynnistä ohjelma uudelleen. Jos ei auta, tiketti. - Tietokone hidas: 1) sulje turhat ohjelmat, 2) käynnistä uudelleen, 3) tarkista vapaa levytila. Jos jatkuu, tiketti. - Tilausjärjestelmä (verkkokauppatilaukset) ei näytä uusia tilauksia: 1) päivitä näkymä, 2) kirjaudu ulos ja sisään. Jos ei auta, tiketti (korkea).  [Kuvankäsittely] - Näytön värit eivät vastaa tulostetta: 1) tarkista näytön kirkkaus ja profiili, 2) aja näytön kalibrointi jos laitteisto on käytössä. Muuten tiketti. - Asiakkaan tiedosto ei aukea: 1) tarkista tiedostomuoto (esim. HEIC, RAW), 2) yritä avata toisella ohjelmalla. Jos tiedosto vaikuttaa vioittuneelta, älä muokkaa alkuperäistä, vaan tee tiketti.  [Neuvotteluhuone / AV] - Ei kuvaa projektorissa/näytöllä: 1) tarkista oikea tulolähde, 2) tarkista HDMI-kaapeli molemmista päistä, 3) kokeile toista porttia/kaapelia. - Ei ääntä: 1) tarkista tietokoneen äänilähtö ja mykistykset, 2) tarkista kaiuttimen/kaiutinpuhelimen virta. - Teams/Meet ei löydä kameraa tai mikrofonia: 1) tarkista käyttöoikeudet ohjelman asetuksista, 2) valitse oikea laite ohjelman asetuksista, 3) irrota ja kytke USB uudelleen.  JOS KYSYMYS EI OSU TIETOPOHJAAN Palauta confident=false ja kirjoita summary-kenttään ongelma selkeästi, jotta ICT-tuki voi jatkaa siitä."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [192, 0],
+      "id": "c2c2fb82-a4ac-4a8c-8c88-bac2591431bc",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FMC2J5gTAVYLaPQE",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.answer }}",
+        "options": {
+          "memoryConnection": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [1056, -80],
+      "id": "2e3ef91f-aba6-428a-be63-1c04499eb7e1",
+      "name": "show_answer_and_create_ticket",
+      "webhookId": "d6861516-f47c-4c40-ac0e-eeae5eb04ce4",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json;\nconst raw = j.text\n  ?? j.output\n  ?? j.content?.parts?.find(p => p.text)?.text\n  ?? '';\nconst clean = raw.replace(/```json|```/g, '').trim();\n\ntry {\n  return [{ json: JSON.parse(clean) }];\n} catch (e) {\n  return [{ json: {\n    confident: false,\n    needs_ticket: true,\n    category: 'Muu',\n    priority: 'normaali',\n    answer: 'En osaa ratkaista tätä varmasti, luodaan tiketti.',\n    summary: 'Botin vastausta ei voitu lukea: ' + raw.slice(0, 100)\n  } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [512, 0],
+      "id": "21898246-9af4-4682-a23d-86f1f8dea2a4",
+      "name": "Parse JSON"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "={{ $json.answer }}\n\n\nRatkesiko?",
+        "responseType": "approval",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double",
+            "approveLabel": "Kyllä",
+            "disapproveLabel": "Ei"
+          }
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [1072, 160],
+      "id": "2e16011d-a664-4f61-8a21-93c805d02d6a",
+      "name": "show_answer_and_approve",
+      "webhookId": "52000b30-d03c-4aed-9877-35fd35cc12eb"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "73827313-e05a-4b08-a472-d7ff2592d30e",
+              "leftValue": "={{ $json.needs_ticket }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [720, 0],
+      "id": "cb49b473-5f0e-4a14-838d-d64688e236a9",
+      "name": "needs_ticket"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "282313cf-c619-4e43-b1bd-56618af84c2c",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [1248, 160],
+      "id": "3fd0a04e-8d64-4598-8ae5-fa9b8a71eca4",
+      "name": "is_it_solved"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "prioriteetti": "={{ $('Parse JSON').item.json.priority }}",
+            "pvm": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "kategoria": "={{ $('Parse JSON').item.json.category }}",
+            "alkuperäinen viesti": "={{ $('Parse JSON').item.json.summary }}",
+            "tila": "Avoin",
+            "ilmoittaja": "ei ilmoitettu"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "pvm",
+              "displayName": "pvm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "kategoria",
+              "displayName": "kategoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "prioriteetti",
+              "displayName": "prioriteetti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tila",
+              "displayName": "tila",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "alkuperäinen viesti",
+              "displayName": "alkuperäinen viesti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ilmoittaja",
+              "displayName": "ilmoittaja",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1248, -80],
+      "id": "7e862cf1-aa1c-4614-8809-12995ebeb7e3",
+      "name": "create_ticket_direct",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uX24ppbVHnfVPImi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pvm": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "kategoria": "={{ $('Parse JSON').item.json.category}}",
+            "prioriteetti": "={{ $('Parse JSON').item.json.priority}}",
+            "tila": "ratkaistu botilla",
+            "alkuperäinen viesti": "={{ $('Parse JSON').item.json.summary}}",
+            "ilmoittaja": "ei ilmoitettu"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "pvm",
+              "displayName": "pvm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kategoria",
+              "displayName": "kategoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prioriteetti",
+              "displayName": "prioriteetti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tila",
+              "displayName": "tila",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "alkuperäinen viesti",
+              "displayName": "alkuperäinen viesti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ilmoittaja",
+              "displayName": "ilmoittaja",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1440, 80],
+      "id": "fcd7a5aa-f419-40aa-842f-514581ef0154",
+      "name": "log_solved_by_bot",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uX24ppbVHnfVPImi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "tickets",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FbOZ4l_opzKMxCZsK-SuR9p61mSShhHjidXGBdBE7nY/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "pvm": "={{ $now.toFormat('dd.MM.yyyy HH:mm') }}",
+            "kategoria": "={{ $('Parse JSON').item.json.category }}",
+            "prioriteetti": "={{ $('Parse JSON').item.json.priority }}",
+            "tila": "=Avoin",
+            "alkuperäinen viesti": "={{ $('Parse JSON').item.json.summary }}",
+            "ilmoittaja": "ei ilmoitettu"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "pvm",
+              "displayName": "pvm",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "kategoria",
+              "displayName": "kategoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prioriteetti",
+              "displayName": "prioriteetti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tila",
+              "displayName": "tila",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "alkuperäinen viesti",
+              "displayName": "alkuperäinen viesti",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ilmoittaja",
+              "displayName": "ilmoittaja",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [1440, 240],
+      "id": "d31985f0-4e7c-4a65-ac5f-a03b59a7a8e8",
+      "name": "create_ticket_unsolved",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "uX24ppbVHnfVPImi",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "message": "Hienoa, kiitos!",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [1648, 80],
+      "id": "ee9ad432-6bd3-4050-9b92-b661d2fd1186",
+      "name": "confirmation",
+      "webhookId": "4493a6ce-0724-499b-8b4a-f93a3fcc0bf4"
+    },
+    {
+      "parameters": {
+        "message": "Tiketti luotu, ICT ottaa yhteyttä.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.3,
+      "position": [1648, 256],
+      "id": "47e75bf0-020f-4b35-b920-bb0530287212",
+      "name": "confirmation2",
+      "webhookId": "98c647f0-a699-4e80-b329-a9c94938ba6d"
+    },
+    {
+      "parameters": {
+        "content": "\n1. **LLM** vastaa vain tietopohjan perusteella, ja sanoo suoraan ellei tiedä vastausta. \n\n2. Mikäli tietopohjasta ei löydy vastausta tai kysymys on kriittinen, (esim. phishing, kassa kaatunut, salasana), luodaan tiketti suoraan.\n\n3. Muuten käyttäjältä kysytään, ratkesiko ongelma. Tulos kirjataan Sheetsiin (\"Ratkaistu botilla\" tai \"Avoin\"), jolloin nähdään, mitkä ongelmat toistuvat.",
+        "height": 208,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [368, -320],
+      "typeVersion": 1,
+      "id": "c716faa1-abb9-4d08-938d-555a1ebcb571",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "show_answer_and_create_ticket": {
+      "main": [
+        [
+          {
+            "node": "create_ticket_direct",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse JSON": {
+      "main": [
+        [
+          {
+            "node": "needs_ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "show_answer_and_approve": {
+      "main": [
+        [
+          {
+            "node": "is_it_solved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "needs_ticket": {
+      "main": [
+        [
+          {
+            "node": "show_answer_and_create_ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "show_answer_and_approve",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "is_it_solved": {
+      "main": [
+        [
+          {
+            "node": "log_solved_by_bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create_ticket_unsolved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_ticket_unsolved": {
+      "main": [
+        [
+          {
+            "node": "confirmation2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "log_solved_by_bot": {
+      "main": [
+        [
+          {
+            "node": "confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Europe/Helsinki",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "e7926579-ef41-41c6-b4d0-6123c1dc407f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cd2bfe23620909c719c2e3dff7a1bf5a7da4dc399670f4edd001f7714559810b"
+  },
+  "nodeGroups": [],
+  "id": "ERDVLET63QzsBUR9",
+  "tags": []
+}
